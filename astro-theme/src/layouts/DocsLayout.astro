@@ -1,0 +1,162 @@
+---
+// Hallazgo: el paquete no solo expone el componente React `Icon` -- tambien publica
+// lib/aranda-icon.css (el @font-face embebido en base64 + las clases .arandaIcon-*) dentro de su
+// carpeta `lib` (package.json declara "files": ["lib"], sin "exports" que bloquee el subpath). Se
+// importa esta hoja de estilos una sola vez y se usan los iconos reales como <span
+// class="arandaIcon-ic_x"> en HTML server-rendered, sin React ni hidratacion -- ver
+// rfc/0001-migracion-astro.md, seccion 3.4.
+import '@aranda/aranda.icons/lib/aranda-icon.css';
+import Nav from '../components/Nav.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import CodeCopyScript from '../components/CodeCopyScript.astro';
+import SearchBox from '../components/SearchBox.astro';
+import ThemeBootstrap from '../components/ThemeBootstrap';
+import Callout from '../components/Callout';
+import { navBySidebar, type NavNode } from '../data/nav';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  title: string;
+  info?: string;
+  beta?: boolean;
+  layoutVariant: 'doc' | 'post' | 'apis' | 'beta' | 'beta-asec' | 'instaladores' | 'only-content';
+  sidebar: string;
+  currentSlug: string;
+  headings: Heading[];
+  pageMap: Record<string, { title: string; url: string }>;
+}
+
+const { title, info, beta, layoutVariant, sidebar, currentSlug, headings, pageMap } = Astro.props;
+const navNodes: NavNode[] = navBySidebar[sidebar] ?? [];
+const showBetaBanner = layoutVariant === 'beta' || layoutVariant === 'beta-asec' || beta;
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · Aranda Docs (POC Astro)</title>
+  </head>
+  <body>
+    <ThemeBootstrap client:only="react" />
+
+    {
+      layoutVariant !== 'only-content' && (
+        <aside id="sidebar">
+          <SearchBox />
+          <Nav nodes={navNodes} pageMap={pageMap} currentSlug={currentSlug} />
+        </aside>
+      )
+    }
+
+    <main id="documentationArea">
+      {layoutVariant !== 'only-content' && <Breadcrumb nodes={navNodes} pageMap={pageMap} currentSlug={currentSlug} />}
+
+      <header class="masthead">
+        <h1>{title}</h1>
+        {info && <p class="masthead-info">{info}</p>}
+      </header>
+
+      {
+        showBetaBanner && (
+          <Callout
+            client:only="react"
+            type="warning"
+            title="Beta"
+            text={
+              layoutVariant === 'beta-asec'
+                ? 'Esta funcionalidad está en fase beta para Aranda Security Compliance (ASEC).'
+                : 'Esta página describe una funcionalidad en fase beta.'
+            }
+          />
+        )
+      }
+
+      <article>
+        <slot />
+      </article>
+
+      <CodeCopyScript />
+    </main>
+
+    {
+      layoutVariant !== 'only-content' && headings.length > 0 && (
+        <TableOfContents headings={headings} />
+      )
+    }
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    font-family: var(--font-family_primary, 'Poppins', sans-serif);
+  }
+  body {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 260px) minmax(0, 1fr) minmax(0, 220px);
+    gap: 1.5rem;
+    color: var(--text-color, #0f172a);
+    background: var(--layout-bg, #fff);
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  /* Hallazgo del POC: <astro-island> (el wrapper que genera Astro para client:only/client:load,
+     ej. ThemeBootstrap) es hijo directo de <body> ANTES del sidebar. Sin esta regla, un grid con
+     columnas implicitas lo cuenta como el primer item y corre sidebar/contenido/TOC un puesto
+     (el sidebar termina ocupando la columna ancha y el contenido la angosta del TOC). Se saca del
+     flujo del grid en vez de depender del orden de los hijos.
+  */
+  astro-island {
+    display: contents;
+  }
+  #sidebar {
+    grid-column: 1;
+    padding: 1rem;
+    border-right: 1px solid var(--table-border-color, #e2e8f0);
+    min-width: 0;
+  }
+  #documentationArea {
+    grid-column: 2;
+    padding: 1.5rem 0;
+    min-width: 0;
+    max-width: 100%;
+  }
+  #documentationArea * {
+    max-width: 100%;
+  }
+  .toc {
+    grid-column: 3;
+  }
+  .masthead-info {
+    color: var(--text-descripcion, #64748b);
+    margin-top: 0.25rem;
+  }
+  /* El theme Jekyll actual tampoco es responsive (3 columnas fijas sin breakpoint) -- esto es una
+     mejora real, no solo un cambio de tecnologia. Bajo ~960px se apila en una sola columna.
+     Hallazgo del POC: este bloque tiene que ir AL FINAL del <style>. Un @media no suma
+     especificidad -- si las reglas base de #sidebar/#documentationArea/.toc aparecen despues en el
+     archivo (aunque sea fuera del media query), ganan igual en pantallas angostas y el
+     grid-column:1 de aca abajo se ignora, causando que el contenido intente ocupar columnas 2/3
+     que ya no existen (se ve todo amontonado/superpuesto). */
+  @media (max-width: 960px) {
+    body {
+      grid-template-columns: 1fr;
+    }
+    #sidebar,
+    #documentationArea,
+    .toc {
+      grid-column: 1;
+    }
+    #sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--table-border-color, #e2e8f0);
+    }
+  }
+</style>

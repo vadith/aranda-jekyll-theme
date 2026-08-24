@@ -1,0 +1,39 @@
+---
+// Busqueda estatica con Pagefind (sin backend), en reemplazo del prototipo desconectado
+// assets/js/modules/{SearchBar,ResultItem,Articles}.js del theme actual (ver
+// rfc/0001-migracion-astro.md, seccion 3.1). Pagefind indexa `dist/` en el postbuild
+// (`pagefind --site dist`, ver package.json) - en `astro dev` el widget queda vacio porque el
+// indice todavia no existe; solo funciona tras `npm run build`.
+---
+
+<div id="search" class="search-box"></div>
+
+<script>
+  // Carga /pagefind/pagefind-ui.js con un <script> de DOM en vez de un import() de modulo: ese
+  // archivo solo existe en dist/ despues del postbuild (`pagefind --site dist`, ver package.json),
+  // y un import() estatico hace que Vite intente resolverlo en build time y falle.
+  const script = document.createElement('script');
+  script.src = '/pagefind/pagefind-ui.js';
+  script.onload = () => {
+    // @ts-expect-error - PagefindUI se registra como global por el script anterior
+    new PagefindUI({ element: '#search', showSubResults: true });
+  };
+  script.onerror = () => {
+    const el = document.getElementById('search');
+    if (el) el.textContent = 'Búsqueda disponible tras `npm run build` (Pagefind indexa dist/).';
+  };
+  document.head.appendChild(script);
+</script>
+
+<style is:global>
+  .search-box {
+    margin-bottom: 1rem;
+  }
+  .pagefind-ui {
+    --pagefind-ui-scale: 0.9;
+    --pagefind-ui-primary: var(--color-brand-default, #4f46e5);
+    --pagefind-ui-text: var(--text-color, #0f172a);
+    --pagefind-ui-background: transparent;
+    --pagefind-ui-border: var(--table-border-color, #e2e8f0);
+  }
+</style>

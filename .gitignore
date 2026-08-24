@@ -18,6 +18,10 @@ npm-debug.log*
 package-lock.json
 codekit-config.json
 
+# astro-theme/ (POC de rfc/0001-migracion-astro.md) es un proyecto Node real: su lockfile
+# se versiona para builds reproducibles, a diferencia del resto del repo (que no usa npm).
+!astro-theme/package-lock.json
+
 # macOS
 .DS_Store
 

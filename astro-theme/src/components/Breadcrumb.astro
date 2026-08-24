@@ -1,0 +1,66 @@
+---
+// Breadcrumb propio, derivado del arbol de nav en build time (sin estado en cliente). El
+// Breadcrumb de @aranda/aranda.ui esta acoplado a un componente Tree con estado
+// (dataTree/setSelectedId) pensado para un explorador interactivo, no para migas de pan estaticas
+// de un sitio de documentacion -- ver rfc/0001-migracion-astro.md, seccion 3.3 (hallazgo del POC).
+import type { NavNode } from '../data/nav';
+
+interface Props {
+  nodes: NavNode[];
+  pageMap: Record<string, { title: string; url: string }>;
+  currentSlug: string;
+}
+
+const { nodes, pageMap, currentSlug } = Astro.props;
+
+function findPath(list: NavNode[], slug: string): { title: string; url?: string }[] | null {
+  for (const node of list) {
+    if ('page' in node && node.page === slug) {
+      const entry = pageMap[node.page];
+      return entry ? [{ title: entry.title, url: entry.url }] : null;
+    }
+    if ('chapter' in node) {
+      const childPath = findPath(node.pages, slug);
+      if (childPath) return [{ title: node.title }, ...childPath];
+    }
+  }
+  return null;
+}
+
+const trail = findPath(nodes, currentSlug) ?? [];
+---
+
+{
+  trail.length > 0 && (
+    <nav aria-label="breadcrumb" class="breadcrumb">
+      <ol>
+        {trail.map((crumb, i) => (
+          <li>
+            {crumb.url && i < trail.length - 1 ? <a href={crumb.url}>{crumb.title}</a> : <span>{crumb.title}</span>}
+            {i < trail.length - 1 && <span aria-hidden="true"> / </span>}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+<style>
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    font-size: var(--font-xsm, 13px);
+    color: var(--text-descripcion, #64748b);
+  }
+  .breadcrumb li {
+    display: flex;
+    align-items: center;
+  }
+  .breadcrumb a {
+    color: inherit;
+    text-decoration: underline;
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+import SideBarSpike from '../components/SideBarSpike';
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Spike: SideBar de aranda.ui para nav de docs</title>
+  </head>
+  <body>
+    <h1 style="font-family: sans-serif; padding: 1rem;">
+      Spike: ¿sirve el SideBar de @aranda/aranda.ui para el nav de documentación?
+    </h1>
+    <p style="font-family: sans-serif; padding: 0 1rem; max-width: 60ch;">
+      Ver comentarios en <code>src/components/SideBarSpike.tsx</code> — mapea Capítulo 1 &gt;
+      Capítulo 1.1 &gt; página nivel 3 (2 niveles reales, lo máximo que SideBar sabe dibujar).
+      Capítulo 1.1.1 y más profundo no tienen dónde ir sin aplanarlos.
+    </p>
+    <div style="height: 600px; position: relative;">
+      <SideBarSpike client:only="react" />
+    </div>
+  </body>
+</html>

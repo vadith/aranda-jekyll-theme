@@ -94,6 +94,8 @@ include:
 exclude:
   - "*.sublime-project"
   - "*.sublime-workspace"
+  - astro-theme
+  - rfc
   - vendor
   - .asset-cache
   - .bundle

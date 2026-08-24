@@ -1,0 +1,60 @@
+---
+// Reemplaza assets/js/modules/handleCopyClick.js (hack con document.execCommand('copy')) por la
+// Clipboard API moderna. Se ejecuta una vez por pagina e inyecta un boton "Copiar" en cada bloque
+// <pre> generado por Shiki (highlighting nativo de Astro). Usa los iconos reales de
+// @aranda/aranda.icons (ic_copyline / ic_check) via las clases CSS del font, importado en
+// DocsLayout.astro -- no hace falta React para esto, es un <span> con una clase.
+---
+
+<script>
+  function addCopyButtons() {
+    document.querySelectorAll('pre').forEach((pre) => {
+      if (pre.parentElement?.classList.contains('code-block')) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+      pre.replaceWith(wrapper);
+      wrapper.appendChild(pre);
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'code-copy-btn';
+      button.innerHTML = '<span class="arandaIcon-ic_copyline" aria-hidden="true"></span> Copiar';
+      button.setAttribute('aria-label', 'Copiar código al portapapeles');
+
+      button.addEventListener('click', async () => {
+        const code = pre.querySelector('code')?.textContent ?? '';
+        await navigator.clipboard.writeText(code);
+        button.innerHTML = '<span class="arandaIcon-ic_check" aria-hidden="true"></span> ¡Copiado!';
+        setTimeout(() => {
+          button.innerHTML = '<span class="arandaIcon-ic_copyline" aria-hidden="true"></span> Copiar';
+        }, 1500);
+      });
+
+      wrapper.appendChild(button);
+    });
+  }
+
+  addCopyButtons();
+</script>
+
+<style is:global>
+  .code-block {
+    position: relative;
+  }
+  .code-copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: var(--font-xsm, 13px);
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid var(--table-border-color, rgba(255, 255, 255, 0.2));
+    background: var(--bg-modal, rgba(0, 0, 0, 0.4));
+    color: #fff;
+    cursor: pointer;
+  }
+</style>

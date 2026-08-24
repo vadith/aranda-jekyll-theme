@@ -1,0 +1,24 @@
+---
+import { getEntry, render } from 'astro:content';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { buildPageMap } from '../../lib/pages';
+
+const entry = await getEntry('docs', 'index');
+if (!entry) throw new Error('Falta src/content/docs/index.mdx');
+
+const { Content, headings } = await render(entry);
+const pageMap = await buildPageMap();
+---
+
+<DocsLayout
+  title={entry.data.title}
+  info={entry.data.info}
+  beta={entry.data.beta}
+  layoutVariant={entry.data.docLayout}
+  sidebar={entry.data.sidebar}
+  currentSlug={entry.slug}
+  headings={headings}
+  pageMap={pageMap}
+>
+  <Content />
+</DocsLayout>

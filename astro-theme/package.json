@@ -1,0 +1,31 @@
+{
+  "name": "@aranda/docs-theme-poc",
+  "private": true,
+  "version": "0.0.0",
+  "description": "POC de migracion de aranda-jekyll-theme a Astro (rfc/0001-migracion-astro.md)",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "postbuild": "pagefind --site dist",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@aranda/aranda.icons": "^2.2.2",
+    "@aranda/aranda.ui": "^3.0.4",
+    "@astrojs/mdx": "^4.0.0",
+    "@astrojs/react": "^4.0.0",
+    "astro": "^5.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "styled-components": "^6.3.11"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "pagefind": "^1.1.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,88 @@
+---
+// TOC a partir de los headings que devuelve render() de la content collection. A diferencia del
+// main.js del theme actual (que indexa solo <h1>, ver rfc seccion 3.1), aqui se indexan h2/h3 -
+// mejora intencional, no un bug a replicar.
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{
+  items.length > 0 && (
+    <aside class="toc" aria-label="Tabla de contenido">
+      <p class="toc-title">En esta página</p>
+      <ul>
+        {items.map((h) => (
+          <li class:list={{ 'toc-h3': h.depth === 3 }}>
+            <a href={`#${h.slug}`} data-toc-link={h.slug}>
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
+
+<style>
+  .toc {
+    font-size: var(--font-xsm, 13px);
+  }
+  .toc-title {
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+  }
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--table-border-color, #e2e8f0);
+  }
+  .toc li {
+    padding: 0.15rem 0 0.15rem 0.75rem;
+  }
+  .toc-h3 {
+    padding-left: 1.5rem;
+  }
+  .toc a {
+    color: var(--text-descripcion, #64748b);
+    text-decoration: none;
+  }
+  .toc a[aria-current='true'] {
+    color: var(--color-brand-default, #4f46e5);
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
+  if (links.length > 0) {
+    const targets = Array.from(links)
+      .map((link) => document.getElementById(link.dataset.tocLink!))
+      .filter((el): el is HTMLElement => el !== null);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const link = document.querySelector(`[data-toc-link="${entry.target.id}"]`);
+          if (entry.isIntersecting) {
+            links.forEach((l) => l.removeAttribute('aria-current'));
+            link?.setAttribute('aria-current', 'true');
+          }
+        });
+      },
+      { rootMargin: '0px 0px -70% 0px' },
+    );
+
+    targets.forEach((el) => observer.observe(el));
+  }
+</script>
